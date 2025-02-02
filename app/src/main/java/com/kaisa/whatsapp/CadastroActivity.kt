@@ -6,7 +6,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.kaisa.whatsapp.databinding.ActivityCadastroBinding
+import com.kaisa.whatsapp.utils.exibirMensagem
 
 class CadastroActivity : AppCompatActivity() {
 
@@ -16,6 +21,11 @@ class CadastroActivity : AppCompatActivity() {
     private lateinit var nome: String
     private lateinit var email: String
     private lateinit var senha: String
+
+    private val firebaseAuth by lazy {
+        FirebaseAuth.getInstance()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -32,9 +42,7 @@ class CadastroActivity : AppCompatActivity() {
     private fun inicializarEventosClique() {
         binding.btnCadastrar.setOnClickListener {
             if (validarCampos()) {
-                startActivity(
-                    Intent(this, LoginActivity::class.java)
-                )
+                cadastrarUsuario(nome, email, senha)
             }
 
         }
@@ -75,5 +83,30 @@ class CadastroActivity : AppCompatActivity() {
         title = "Faça seu cadastro"
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+    }
+
+    private fun cadastrarUsuario(nome: String, email: String, senha: String) {
+        firebaseAuth.createUserWithEmailAndPassword(email, senha)
+            .addOnCompleteListener { resultado ->
+                if (resultado.isSuccessful) {
+                    exibirMensagem("Cadastro realizado com sucesso")
+                    startActivity(
+                        Intent(applicationContext, MainActivity::class.java)
+                    )
+                }
+            }.addOnFailureListener { erro ->
+                try {
+                    throw erro
+                }catch(erroSenhaFrca: FirebaseAuthWeakPasswordException) {
+                    erroSenhaFrca.printStackTrace()
+                    exibirMensagem("Digite uma senha msi forte, com nunmeros e letras")
+                }catch(erroUsuarioExistente: FirebaseAuthUserCollisionException) {
+                    erroUsuarioExistente.printStackTrace()
+                    exibirMensagem("E-mail foi utilizado para cadastro anterior digite um outro e-mail")
+                }catch(erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
+                    erroCredenciaisInvalidas.printStackTrace()
+                    exibirMensagem("E-mail inválido digite um outro e-mail")
+                }
+            }
     }
 }
