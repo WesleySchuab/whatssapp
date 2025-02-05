@@ -10,7 +10,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.firestore.FirebaseFirestore
 import com.kaisa.whatsapp.databinding.ActivityCadastroBinding
+import com.kaisa.whatsapp.model.Usuario
 import com.kaisa.whatsapp.utils.exibirMensagem
 
 class CadastroActivity : AppCompatActivity() {
@@ -24,6 +26,9 @@ class CadastroActivity : AppCompatActivity() {
 
     private val firebaseAuth by lazy {
         FirebaseAuth.getInstance()
+    }
+    private val firestore by lazy {
+        FirebaseFirestore.getInstance()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,11 +94,13 @@ class CadastroActivity : AppCompatActivity() {
         firebaseAuth.createUserWithEmailAndPassword(email, senha)
             .addOnCompleteListener { resultado ->
                 if (resultado.isSuccessful) {
-                    exibirMensagem("Cadastro realizado com sucesso")
-                    startActivity(
-                        Intent(applicationContext, MainActivity::class.java)
-                    )
+                    val id = resultado.result.user?.uid
+                    if (id != null) {
+                        val usuario  = Usuario(id, nome, email)
+                        salvarUsuario(usuario)
+                    }
                 }
+
             }.addOnFailureListener { erro ->
                 try {
                     throw erro
@@ -107,6 +114,20 @@ class CadastroActivity : AppCompatActivity() {
                     erroCredenciaisInvalidas.printStackTrace()
                     exibirMensagem("E-mail inválido digite um outro e-mail")
                 }
+            }
+    }
+
+    private fun salvarUsuario(usuario: Usuario) {
+        firestore.collection("usuarios")
+            .document(usuario.id)
+            .set(usuario)
+            .addOnSuccessListener {
+                exibirMensagem("Cadastro realizado com sucesso")
+                startActivity(
+                    Intent(applicationContext, MainActivity::class.java)
+                )
+            }.addOnFailureListener{
+                exibirMensagem("Erro ao realizar cadastro sucesso")
             }
     }
 }
