@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.auth.FirebaseAuth
 import com.kaisa.whatsapp.databinding.ActivityMainBinding
 
@@ -26,11 +28,21 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(binding.root)
         inicializarToolbar()
+        inicilizarNavegacaoAbas()
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.editnome)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+    }
+
+    private fun inicilizarNavegacaoAbas() {
+        val tabLayout = binding.tabLayoutPrincipal
+        val viewPager = binding.viewPagerPrincipal
+        TabLayoutMediator(tabLayout, viewPager){ aba, posicao ->
+            aba
+
         }
     }
 
