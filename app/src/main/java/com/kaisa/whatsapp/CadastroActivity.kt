@@ -44,6 +44,13 @@ class CadastroActivity : AppCompatActivity() {
         }
     }
 
+    private fun inicializarToolbar() {
+        val toolbar = binding.includeToolbarCadastro.tbPrincipal
+        setSupportActionBar(toolbar)
+        title = "Faça seu cadastro"
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    }
+
     private fun inicializarEventosClique() {
         binding.btnCadastrar.setOnClickListener {
             if (validarCampos()) {
@@ -80,14 +87,6 @@ class CadastroActivity : AppCompatActivity() {
             retorno = false
         }
         return retorno
-    }
-
-    private fun inicializarToolbar() {
-        val toolbar = binding.includeToolbar.tbPrincipal
-        setSupportActionBar(toolbar)
-        title = "Faça seu cadastro"
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
     }
 
     private fun cadastrarUsuario(nome: String, email: String, senha: String) {
