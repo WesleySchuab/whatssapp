@@ -47,6 +47,8 @@ dependencies {
     implementation("com.google.android.material:material:1.11.0")
 //    implementation("com.google.firebase:firebase-analytics")
 
+    //implementation("androidx.activity:activity-ktx:$activity_version")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
