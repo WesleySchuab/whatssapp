@@ -1,10 +1,8 @@
 package com.kaisa.whatsapp
-
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -20,16 +18,37 @@ class PerfilActivity : AppCompatActivity() {
     private var permissaoCamera = false
     private var permissaoGaleria = false
 
+    private val Gerenciadorgaleria = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            binding.imagePerfil.setImageURI(uri)
+        } else {
+            exibirMensagem("Nenhuma imagem selecionada")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(binding.root)
         inicialisarToolbar()
         solicitarPermissoes()
+        inicialiarEventosClique()
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+    }
+
+    private fun inicialiarEventosClique() {
+        binding.fabSelecionar.setOnClickListener {
+            if (permissaoGaleria) {
+                Gerenciadorgaleria.launch("image/*")
+            } else {
+                solicitarPermissoes()
+            }
         }
     }
 
@@ -39,31 +58,17 @@ class PerfilActivity : AppCompatActivity() {
             this,
             Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
+        //exibirMensagem("permissao camera"+permissaoCamera)
 
         permissaoGaleria = ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.READ_MEDIA_IMAGES
         ) == PackageManager.PERMISSION_GRANTED
+        exibirMensagem("permissao galeria"+permissaoGaleria)
 
-       /* val listaPermissoesNegadas = mutableListOf<String>()
-        if (!permissaoCamera) {
-            listaPermissoesNegadas.add(Manifest.permission.CAMERA)
-        }
-        if (!permissaoGaleria) {
-            listaPermissoesNegadas.add(Manifest.permission.READ_MEDIA_IMAGES)
-        }*/
-        var permissao = true
-        if (!permissaoCamera) {
-            permissao = false
-            exibirMensagem("Você não concedeu as permissões de Câ" +
-                    "mera")
-        }
-        if (!permissaoGaleria) {
-            permissao = false
-        }
 
-        if (permissao) {
-            exibirMensagem("Você não concedeu as permissões")
+        if ( ! ( permissaoGaleria || permissaoCamera ) ) {
+            exibirMensagem("forneça as permissoes para prosseguir")
             // Solicitar Multiplas Permissoes
             val gerenciadorPermissoes = registerForActivityResult(
                 ActivityResultContracts.RequestMultiplePermissions()
@@ -73,11 +78,13 @@ class PerfilActivity : AppCompatActivity() {
                 permissaoGaleria = permissoes[Manifest.permission.READ_MEDIA_IMAGES] ?: false
 
                 // Aqui você pode adicionar lógica para lidar com o resultado das permissões
-                if (permissaoCamera && permissaoGaleria) {
+                /*if (permissaoCamera && permissaoGaleria) {
                     // Todas as permissões foram concedidas
+                    exibirMensagem("Todas as permissões foram concedidas")
                 } else {
                     // Alguma permissão foi negada
-                }
+                    exibirMensagem("Você não concedeu as permissões")
+                }*/
             }
 
 // Lista de permissões que você deseja solicitar
@@ -92,14 +99,13 @@ class PerfilActivity : AppCompatActivity() {
     }
 
 
+    private fun inicialisarToolbar() {
+        val toolbar = binding.IncludeToolbarperfil.tbPrincipal
+        setSupportActionBar(toolbar)
+        supportActionBar?.apply {
+            title = "Editar Perfil"
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        }
 
-private fun inicialisarToolbar() {
-    val toolbar = binding.IncludeToolbarperfil.tbPrincipal
-    setSupportActionBar(toolbar)
-    supportActionBar?.apply {
-        title = "Editar Perfil"
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
-
-}
 }
