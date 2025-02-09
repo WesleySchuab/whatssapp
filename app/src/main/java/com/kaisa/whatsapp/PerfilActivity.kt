@@ -1,6 +1,8 @@
 package com.kaisa.whatsapp
+
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -8,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.storage.FirebaseStorage
 import com.kaisa.whatsapp.databinding.ActivityPerfilBinding
 import com.kaisa.whatsapp.utils.exibirMensagem
 
@@ -18,14 +22,44 @@ class PerfilActivity : AppCompatActivity() {
     private var permissaoCamera = false
     private var permissaoGaleria = false
 
+    private val firebaseAuth by lazy {
+        FirebaseAuth.getInstance()
+    }
+    private val storage by lazy {
+        FirebaseStorage.getInstance()
+    }
+
     private val Gerenciadorgaleria = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
             binding.imagePerfil.setImageURI(uri)
+            uploadImageStorage(uri)
         } else {
             exibirMensagem("Nenhuma imagem selecionada")
         }
+    }
+
+    private fun uploadImageStorage(uri: Uri) {
+
+        val idUsuario = firebaseAuth.currentUser?.uid
+        if (idUsuario != null) {
+            // fotos / usuarios / idUsuario
+            storage
+                .getReference("fotos")
+                .child("usuarios")
+                .child(idUsuario)
+                .child("perfil.jpg")
+                .putFile(uri)
+                .addOnSuccessListener { task ->
+                    exibirMensagem("sucesso ao fazer upload da imagem")
+                }.addOnFailureListener {
+                    exibirMensagem("erro ao fazer upload da imagem")
+                }
+        }else{
+            exibirMensagem("id do usuário nulo")
+        }
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,10 +98,10 @@ class PerfilActivity : AppCompatActivity() {
             this,
             Manifest.permission.READ_MEDIA_IMAGES
         ) == PackageManager.PERMISSION_GRANTED
-        exibirMensagem("permissao galeria"+permissaoGaleria)
+        exibirMensagem("permissao galeria" + permissaoGaleria)
 
 
-        if ( ! ( permissaoGaleria || permissaoCamera ) ) {
+        if (!(permissaoGaleria || permissaoCamera)) {
             exibirMensagem("forneça as permissoes para prosseguir")
             // Solicitar Multiplas Permissoes
             val gerenciadorPermissoes = registerForActivityResult(
