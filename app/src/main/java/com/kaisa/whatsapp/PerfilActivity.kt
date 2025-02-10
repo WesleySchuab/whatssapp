@@ -15,6 +15,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.kaisa.whatsapp.databinding.ActivityPerfilBinding
 import com.kaisa.whatsapp.utils.exibirMensagem
+import com.squareup.picasso.Picasso
 
 class PerfilActivity : AppCompatActivity() {
     private val binding by lazy {
@@ -100,7 +101,35 @@ class PerfilActivity : AppCompatActivity() {
         }
     }
 
-    private fun inicialiarEventosClique() {
+    override fun onStart() {
+        super.onStart()
+        recuperarDadosIniciaisUsuario()
+    }
+
+    private fun recuperarDadosIniciaisUsuario() {
+        val idUsuario = firebaseAuth.currentUser?.uid
+        if (idUsuario != null) {
+            firestore
+                .collection("usuarios")
+                .document(idUsuario)
+                .get()
+                .addOnSuccessListener { documentSnapshot ->
+                    val dados = documentSnapshot.data
+                    if (dados != null) {
+                        val nome = dados["nome"] as String
+                        val foto = dados["foto"] as String
+                        binding.editNomePerfil.setText(nome)
+                        if (foto.isNotEmpty()) {
+                            Picasso.get()
+                                .load(foto)
+                                .into(binding.imagePerfil)
+                        }
+                    }
+                }
+
+        }
+    }
+        private fun inicialiarEventosClique() {
         binding.fabSelecionar.setOnClickListener {
             if (permissaoGaleria) {
                 Gerenciadorgaleria.launch("image/*")

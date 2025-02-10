@@ -45,6 +45,7 @@ dependencies {
     implementation ("com.google.firebase:firebase-firestore")
     implementation ("com.google.firebase:firebase-storage")
     implementation("com.google.android.material:material:1.11.0")
+    implementation("com.squareup.picasso:picasso:2.8")
 //    implementation("com.google.firebase:firebase-analytics")
 
     //implementation("androidx.activity:activity-ktx:$activity_version")
