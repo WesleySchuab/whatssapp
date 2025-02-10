@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.kaisa.whatsapp.databinding.ActivityPerfilBinding
 import com.kaisa.whatsapp.utils.exibirMensagem
@@ -27,6 +28,9 @@ class PerfilActivity : AppCompatActivity() {
     }
     private val storage by lazy {
         FirebaseStorage.getInstance()
+    }
+    private val firestore by lazy {
+        FirebaseFirestore.getInstance()
     }
 
     private val Gerenciadorgaleria = registerForActivityResult(
@@ -53,6 +57,13 @@ class PerfilActivity : AppCompatActivity() {
                 .putFile(uri)
                 .addOnSuccessListener { task ->
                     exibirMensagem("sucesso ao fazer upload da imagem")
+                    task.metadata?.reference?.downloadUrl?.addOnSuccessListener { url ->
+                        exibirMensagem("sucesso ao pegar a url da imagem")
+                        val dados = mapOf(
+                            "foto" to url.toString()
+                        )
+                        atualizarDadosPerfil(idUsuario, dados)
+                    }
                 }.addOnFailureListener {
                     exibirMensagem("erro ao fazer upload da imagem")
                 }
@@ -60,6 +71,19 @@ class PerfilActivity : AppCompatActivity() {
             exibirMensagem("id do usuário nulo")
         }
 
+    }
+
+    private fun atualizarDadosPerfil(idUsuario: String, dados: Map<String, String>){
+        // Atualizar os dados do usuário no Firestore
+        firestore
+            .collection("usuarios")
+            .document(idUsuario)
+            .update(dados)
+            .addOnSuccessListener {
+                exibirMensagem("Dados atualizados com sucesso")
+            }.addOnFailureListener {
+                exibirMensagem("Erro ao atualizar dados")
+            }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,6 +106,24 @@ class PerfilActivity : AppCompatActivity() {
                 Gerenciadorgaleria.launch("image/*")
             } else {
                 solicitarPermissoes()
+            }
+        }
+        binding.btnAtualizarPerfil.setOnClickListener {
+            val nomeUsuario = binding.editNomePerfil.text.toString()
+            if (nomeUsuario.isNotEmpty()) {
+               val idUsuario = firebaseAuth.currentUser?.uid
+                if (idUsuario != null) {
+                    val dados = mapOf(
+                        "nome" to nomeUsuario
+                    )
+                    atualizarDadosPerfil(idUsuario, dados)
+                    binding.editNomePerfil.setText("")
+                }else{
+                    exibirMensagem("usuario invalido")
+                }
+            }else{
+                exibirMensagem("Digite seu nome")
+                binding.textIputNomePerfil.error = "Digite seu nome"
             }
         }
     }
