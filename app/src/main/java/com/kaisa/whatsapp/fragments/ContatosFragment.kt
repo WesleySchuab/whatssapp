@@ -8,12 +8,14 @@ import android.view.View
 import android.view.ViewGroup
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.kaisa.whatsapp.R
 import com.kaisa.whatsapp.databinding.FragmentContatosBinding
 import com.kaisa.whatsapp.model.Usuario
 
 class ContatosFragment : Fragment() {
     private lateinit var binding: FragmentContatosBinding
+    private lateinit var eventoSnapshot: ListenerRegistration
     private val firebaseAuth by lazy {
         FirebaseAuth.getInstance()
     }
@@ -31,8 +33,6 @@ class ContatosFragment : Fragment() {
             false
         )
         return binding.root
-        // Inflate the layout for this fragment
-        //return inflater.inflate(R.layout.fragment_contatos, container, false)
     }
 
     override fun onStart() {
@@ -41,20 +41,27 @@ class ContatosFragment : Fragment() {
     }
 
     private fun adicionarListenerContatos() {
-        firestore.collection("usuarios")
+        eventoSnapshot = firestore.collection("usuarios")
             .addSnapshotListener { querySnapshot, erro ->
+                val listaContatos = mutableListOf<Usuario>()
                 val documentos = querySnapshot?.documents
                 documentos?.forEach { documento ->
                     val usuario = documento.toObject(Usuario::class.java)
                     if (usuario != null) {
-                        Log.i("ContatosFragment", "adicionarListenerContatos: ${usuario.nome} ")
-                    }
+                        val idUsuarioLogado = firebaseAuth.currentUser?.uid
+                        if (idUsuarioLogado != null) {
+                            if (idUsuarioLogado != usuario.id) {
+                                listaContatos.add(usuario)
+                            }
+                        }
+                     }
                 }
             }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        eventoSnapshot.remove()
     }
 
 }
